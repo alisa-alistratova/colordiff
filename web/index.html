@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Color Distance – IB Math Study</title>
+  <style>
+    :root { --gap: 16px; --card: 180px; --accent: #222; --muted: #666; }
+    html, body { height: 100%; margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background: #fafafa; color: #111; }
+    .wrap { max-width: 900px; margin: 0 auto; padding: 24px; }
+    h1, h2, h3 { margin: 0 0 12px; }
+    p { line-height: 1.5; color: #222; }
+    .card { background: white; border: 1px solid #ddd; border-radius: 12px; padding: 20px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); }
+    .center { text-align: center; }
+    .controls { display: flex; gap: var(--gap); align-items: center; justify-content: center; flex-wrap: wrap; }
+    button { padding: 10px 16px; border-radius: 10px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-weight: 600; }
+    button.primary { background: #111; color: white; border-color: #111; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    .swatches { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap); margin: 16px 0; }
+    .swatch { height: var(--card); border-radius: 12px; border: 1px solid rgba(0,0,0,.15); box-shadow: inset 0 0 0 1px rgba(255,255,255,.25); }
+    .meter { display: grid; gap: 8px; }
+    input[type=range] { width: 100%; }
+    .muted { color: var(--muted); font-size: .95rem; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: var(--gap); margin-bottom: 16px; }
+    .badge { background: #eee; padding: 6px 10px; border-radius: 999px; font-size: .9rem; }
+    .panel { display: none; }
+    .panel.active { display: block; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    ul { margin: .5em 0 .5em 1.5em; }
+    .color-chip {
+      display: inline-block;
+      width: 1.4em;
+      height: 1.4em;
+      border-radius: 4px;
+      border: 1px solid rgba(0,0,0,.25);
+      margin: 0 0.25em;
+      vertical-align: middle;
+    }
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-backdrop.show {
+      display: flex;
+    }
+    .modal {
+      background: #fff;
+      max-width: 420px;
+      width: 100%;
+      margin: 16px;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 10px 35px rgba(0,0,0,.25);
+    }
+    .modal h3 {
+      margin-top: 0;
+    }
+    .modal p {
+      margin-bottom: 0.75em;
+    }
+    .modal-media {
+      text-align: center;
+      margin: 12px 0;
+    }
+    .modal-media img,
+    .modal-media iframe {
+      max-width: 100%;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="badge" id="participantBadge">Participant: —</div>
+    <div class="controls">
+      <button id="resetBtn" title="Clear local data & restart">Reset</button>
+    </div>
+  </div>
+
+  <!-- Intro / Consent Panel -->
+  <section id="intro" class="panel card">
+    <h1>Color Distance Study</h1>
+    <p>This small research project explores how people perceive differences between colors and which color models best match human perception. You will see pairs of color cards and rate how similar they feel on a scale from <strong>0</strong> (maximally different) to <strong>100</strong> (identical).</p>
+
+    <h3>Examples</h3>
+    <ul>
+      <li>
+        <span class="color-chip" style="background:#000000;" title="#000000"></span>
+        vs
+        <span class="color-chip" style="background:#FFFFFF;" title="#FFFFFF"></span>
+        → typically near <strong>0</strong>.
+      </li>
+      <li>
+        Two identical colors (e.g.,
+        <span class="color-chip" style="background:#42A5F5;" title="#42A5F5"></span>
+        vs
+        <span class="color-chip" style="background:#42A5F5;" title="#42A5F5"></span>
+        ) → <strong>100</strong>.
+      </li>
+    </ul>
+
+    <h3>How it works</h3>
+    <ul>
+      <li>Rate as many pairs as you like; you can stop at any time.</li>
+      <li>Your name and your completed ratings count are stored only in your browser (local storage) to show progress. You can erase them with “Reset”.</li>
+      <li>Each rating you submit is sent to our server with: name, Color A, Color B, and your score (0–100).</li>
+    </ul>
+
+    <h3>Privacy & consent</h3>
+    <p class="muted">We collect only what you type as a name (can be a nickname), plus your ratings. No passwords. No demographic data. The dataset will be used for a school math project (IB Math SL) to compare color models. Aggregated, anonymized results may be shared in the project report or a class presentation. By pressing “Start”, you consent to participate. You can withdraw any time by closing the page; to clear local info, press “Reset”.</p>
+
+    <div class="card" style="margin-top:16px;">
+      <label for="name"><strong>How should we refer to you?</strong> (nickname or first name)</label><br>
+      <input id="name" type="text" placeholder="e.g., Alex" style="width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;margin-top:6px;" />
+      <div class="controls" style="margin-top:14px;">
+        <button id="startBtn" class="primary">Start</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rating Panel -->
+  <section id="rating" class="panel card">
+    <h2 class="center">Rate the similarity between these two colors</h2>
+    <div class="swatches">
+      <div class="swatch" id="swA" aria-label="Color A"></div>
+      <div class="swatch" id="swB" aria-label="Color B"></div>
+    </div>
+
+    <div class="meter">
+      <div class="row">
+        <div class="muted">0 = maximally different</div>
+        <div class="muted" style="text-align:right;">100 = identical</div>
+      </div>
+      <input id="slider" type="range" min="0" max="100" step="1" value="50" />
+      <div class="center">Your score: <span id="score">50</span></div>
+    </div>
+
+    <div class="controls" style="margin-top:14px;">
+      <button id="submitBtn" class="primary">Submit</button>
+      <button id="skipBtn" title="Show another pair without submitting">Skip</button>
+    </div>
+
+    <p class="muted center" style="margin-top:10px;">Completed ratings: <span id="done">0</span></p>
+  </section>
+
+  <!-- Milestone popup -->
+  <div id="milestoneModal" class="modal-backdrop" aria-hidden="true">
+    <div class="modal">
+      <h3 id="milestoneTitle">Thank you!</h3>
+      <p id="milestoneText"></p>
+      <div id="milestoneMedia" class="modal-media"></div>
+      <div class="center" style="margin-top:10px;">
+        <button id="milestoneCloseBtn" class="primary">Continue</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // === Configuration ===
+  const BACKEND_URL = '/submit';
+
+  // Predefined color pairs (to gather many ratings on comparable stimuli)
+  const PREDEFINED = [
+      ['#FFD700', '#FFD700'],
+      ['#964600', '#964600'],
+      ['#14960A', '#14960A'],
+      ['#000000', '#FFFFFF'],
+      ['#FF0000', '#00FFFF'],
+      ['#0057B7', '#FFD700'],
+      ['#191919', '#E5E5E5'],
+      ['#333333', '#CCCCCC'],
+      ['#4C4C4C', '#B2B2B2'],
+      ['#666666', '#999999'],
+      ['#002FA7', '#00005C'],
+      ['#FF00FF', '#DF00FF'],
+      ['#C41E3A', '#DF73FF'],
+      ['#C3B091', '#BDB76B'],
+      ['#808000', '#9AB973'],
+      ['#40E0D0', '#99FF99'],
+      ['#FF7F50', '#B7410E'],
+      ['#964B00', '#D2B48C'],
+      ['#000080', '#0F52BA'],
+      ['#FFF8E7', '#FFFDD0'],
+      ['#BDFCC9', '#F5FFFA'],
+      ['#E6E6FA', '#D8BFD8'],
+      ['#FA8072', '#FFA07A'],
+      ['#FFD700', '#CC7722'],
+      ['#C0FF00', '#FFBA00'],
+      ['#FF7F7F', '#99FF7F'],
+      ['#2D77E5', '#E52D9C'],
+      ['#CBFF00', '#F4FFCC'],
+      ['#2800CC', '#9B8ECC'],
+      ['#11B252', '#6BB287'],
+      ['#A3BFCC', '#008ECC'],
+      ['#B2A0AB', '#B22379'],
+      ['#00FF66', '#004C1E'],
+      ['#E52D9C', '#661445'],
+      ['#CC923D', '#33240F'],
+      ['#E59C2D', '#7F5619'],
+      ['#5B92E5', '#284166'],
+      ['#CC8214', '#5B994C'],
+      ['#4C607F', '#E52D9C'],
+      ['#787878', '#828282'],
+      ['#F0F0E6', '#FAFAF0'],
+      ['#001900', '#E5FFE5'],
+      ['#111110', '#4016E5'],
+      ['#494854', '#ABF60D'],
+      ['#1AF000', '#0B09F2'],
+      ['#CB00D6', '#07EB1D'],
+      ['#B98602', '#4904E4'],
+  ];
+
+  // Milestones: how many completed ratings → small celebration popup
+  const MILESTONES = {
+    10: {
+      title: "10 ratings – thank you!",
+      text: "You’ve just made the dataset noticeably better. Every rating helps this project.<br><br><span style=\"color:#777;font-style:italic;\">Please keep going, the experiment is just getting started!</span>",
+      gif: "https://media.giphy.com/media/111ebonMs90YLu/giphy.gif",
+      youtube: null
+    },
+    50: {
+      title: "50 ratings – awesome!",
+      text: "That’s a serious contribution. You’re really helping the math behind color perception.<br><br><span style=\"color:#777;font-style:italic;\">Keep it up: the more ratings we gather, the clearer the results become!</span>",
+      gif: "https://media.giphy.com/media/11sBLVxNs7v6WA/giphy.gif",
+      youtube: null
+    },
+    100: {
+      title: "100 ratings – data hero!",
+      text: "This many ratings give very strong data. Thank you for your patience and curiosity.",
+      gif: null,
+      youtube: "https://www.youtube.com/embed/dQw4w9WgXcQ"
+    },
+    200: {
+      title: "200 ratings – wow!",
+      text: "You’ve gone way beyond what we expected from any participant. Huge thanks!",
+      gif: "https://media.giphy.com/media/ymFDudHcTn6I6vLGgd/giphy.gif",
+      youtube: null
+    },
+    500: {
+      title: "500 ratings – legend!",
+      text: "At this point you basically co-authored the dataset. The project is so much stronger thanks to you.",
+      gif: "https://media.giphy.com/media/wl6l9trsOaktq/giphy.gif",
+      youtube: null
+    },
+    1000: {
+      title: "1000 ratings – final boss of colors!",
+      text: "This is an extraordinary contribution. Thank you for pushing this project to the next level.<br/><br/><span style='color:#777;font-style:italic;'>This is the last milestone — if you were hoping for another surprise, don’t wait for it. Your contribution is already outrageously great!</span>",
+      gif: null,
+      youtube: "https://www.youtube.com/embed/Y6ljFaKRTrI"
+    }
+  };
+
+  let lastIndex = -1;
+  function nextPair() {
+    let idx;
+    if (PREDEFINED.length === 1) {
+      idx = 0;
+    } else {
+      do {
+        idx = Math.floor(Math.random() * PREDEFINED.length);
+      } while (idx === lastIndex);
+    }
+    lastIndex = idx;
+
+    // Randomly swap A and B
+    let [a, b] = PREDEFINED[idx];
+    if (Math.random() < 0.5) {
+      [a, b] = [b, a];
+    }
+    return [a, b];
+  }
+
+  // DOM
+  const intro = document.getElementById('intro');
+  const rating = document.getElementById('rating');
+  const swA = document.getElementById('swA');
+  const swB = document.getElementById('swB');
+  const slider = document.getElementById('slider');
+  const score = document.getElementById('score');
+  const submitBtn = document.getElementById('submitBtn');
+  const skipBtn = document.getElementById('skipBtn');
+  const done = document.getElementById('done');
+  const nameInput = document.getElementById('name');
+  const startBtn = document.getElementById('startBtn');
+  const resetBtn = document.getElementById('resetBtn');
+  const participantBadge = document.getElementById('participantBadge');
+  const milestoneModal = document.getElementById('milestoneModal');
+  const milestoneTitle = document.getElementById('milestoneTitle');
+  const milestoneText = document.getElementById('milestoneText');
+  const milestoneMedia = document.getElementById('milestoneMedia');
+  const milestoneCloseBtn = document.getElementById('milestoneCloseBtn');
+
+  // Local storage keys
+  const LS_NAME = 'cd_name';
+  const LS_COUNT = 'cd_count';
+  const LS_MILESTONES = 'cd_milestones_reached';
+
+  // State
+  let participant = localStorage.getItem(LS_NAME) || '';
+  let count = parseInt(localStorage.getItem(LS_COUNT) || '0');
+  let reachedMilestones = JSON.parse(localStorage.getItem(LS_MILESTONES) || '[]');
+  let current = nextPair();
+
+  function setPanel(showRating) {
+    intro.classList.toggle('active', !showRating);
+    rating.classList.toggle('active', showRating);
+  }
+
+  function render() {
+    participantBadge.textContent = 'Participant: ' + (participant || '—');
+    done.textContent = String(count);
+    swA.style.background = current[0];
+    swB.style.background = current[1];
+  }
+
+  function start() {
+    participant = (nameInput.value || '').trim();
+    if (!participant) { alert('Please enter a name or nickname to proceed.'); return; }
+    localStorage.setItem(LS_NAME, participant);
+    setPanel(true);
+    render();
+  }
+
+  function resetSlider() {
+    slider.value = 50;
+    score.textContent = '50';
+  }
+
+  function hasReachedMilestone(m) {
+    return reachedMilestones.indexOf(m) !== -1;
+  }
+
+  function markMilestone(m) {
+    if (!hasReachedMilestone(m)) {
+      reachedMilestones.push(m);
+      localStorage.setItem(LS_MILESTONES, JSON.stringify(reachedMilestones));
+    }
+  }
+
+  function showMilestoneModal(m) {
+    const cfg = MILESTONES[m];
+    if (!cfg) return;
+
+    milestoneTitle.textContent = cfg.title;
+    milestoneText.innerHTML = cfg.text;
+    milestoneMedia.innerHTML = '';
+
+    if (cfg.gif) {
+      const img = document.createElement('img');
+      img.src = cfg.gif;
+      img.alt = 'celebration';
+      milestoneMedia.appendChild(img);
+    } else if (cfg.youtube) {
+      const iframe = document.createElement('iframe');
+      iframe.width = "100%";
+      iframe.height = "230";
+      iframe.src = cfg.youtube;
+      iframe.title = "YouTube video player";
+      iframe.frameBorder = "0";
+      iframe.allow =
+        "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+      iframe.allowFullscreen = true;
+      milestoneMedia.appendChild(iframe);
+    }
+
+    milestoneModal.classList.add('show');
+    milestoneModal.setAttribute('aria-hidden', 'false');
+  }
+
+  function maybeShowMilestone(currentCount) {
+    if (MILESTONES[currentCount] && !hasReachedMilestone(currentCount)) {
+      markMilestone(currentCount);
+      showMilestoneModal(currentCount);
+    }
+  }
+
+  function resetAll() {
+    localStorage.removeItem(LS_NAME);
+    localStorage.removeItem(LS_COUNT);
+    participant = '';
+    count = 0;
+    lastIndex = -1;
+    reachedMilestones = [];
+    current = nextPair();
+    resetSlider();
+    setPanel(false);
+    render();
+  }
+
+  async function submit() {
+    submitBtn.disabled = true;
+    const payload = { name: participant, colorA: current[0], colorB: current[1], score: Number(slider.value) };
+    try {
+      const res = await fetch(BACKEND_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error('Server responded ' + res.status);
+      count += 1;
+      localStorage.setItem(LS_COUNT, String(count));
+      current = nextPair();
+      resetSlider();
+      render();
+      maybeShowMilestone(count);
+    } catch (err) {
+      console.error(err);
+      alert('Could not submit rating. Is the backend running at ' + BACKEND_URL + ' ?');
+    } finally {
+      submitBtn.disabled = false;
+    }
+  }
+
+  function skip() {
+    current = nextPair();
+    resetSlider();
+    render();
+  }
+
+  // Wiring
+  slider.addEventListener('input', () => { score.textContent = slider.value; });
+  submitBtn.addEventListener('click', submit);
+  skipBtn.addEventListener('click', skip);
+  startBtn.addEventListener('click', start);
+  resetBtn.addEventListener('click', resetAll);
+  milestoneCloseBtn.addEventListener('click', () => {
+    milestoneModal.classList.remove('show');
+    milestoneModal.setAttribute('aria-hidden', 'true');
+    milestoneMedia.innerHTML = '';
+  });
+  milestoneModal.addEventListener('click', (e) => {
+    if (e.target === milestoneModal) {
+      milestoneModal.classList.remove('show');
+      milestoneModal.setAttribute('aria-hidden', 'true');
+      milestoneMedia.innerHTML = '';
+    }
+  });
+
+  // Initial load
+  if (participant) {
+    nameInput.value = participant;
+    setPanel(true);
+  } else {
+    setPanel(false);
+  }
+  render();
+</script>
+</body>
+</html>
